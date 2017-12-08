@@ -49,6 +49,7 @@
             android:textSize="14sp" />
 
         <EditText
+            android:id="@+id/new_todo_text"
             android:background="@drawable/bg_edit_text"
             android:layout_width="match_parent"
             android:hint="Название задачи..."
@@ -70,6 +71,7 @@
 
     <ListView
         android:id="@+id/project_list"
+        android:descendantFocusability="beforeDescendants"
         android:background="@color/systemWhiteColor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

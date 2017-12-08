@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Todo Rails</string>
     <string name="default_font">fonts/OpenSans-Light.ttf</string>
-    <string name="projectsIndexRequest">http://192.168.1.48:3000/projects/index.json</string>
-    <string name="todosIndexRequest">http://192.168.1.48:3000/todos/index.json</string>
+    <string name="projectsIndexRequest">https://glacial-cliffs-18885.herokuapp.com/projects/index.json</string>
+    <string name="todosIndexRequest">https://glacial-cliffs-18885.herokuapp.com/todos/index.json</string>
+    <string name="projectsRequest">https://glacial-cliffs-18885.herokuapp.com/projects/</string>
 </resources>

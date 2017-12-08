@@ -1,7 +1,7 @@
 package com.example.limon.todorails;
 
 import android.content.Context;
-import android.util.Log;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,15 +10,14 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
-import org.json.JSONArray;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.TreeSet;
 
 
@@ -31,9 +30,14 @@ public class ListAdapter extends BaseAdapter {
     private TreeSet<Integer> sectionHeader = new TreeSet<>();
 
     private LayoutInflater mInflater;
+    private List<Todo> todos;
 
-    public ListAdapter(Context context) {
+    private Context context;
+
+    public ListAdapter(Context context, List<Todo> todos) {
         mInflater = (LayoutInflater) context.getSystemService(context.LAYOUT_INFLATER_SERVICE);
+        this.context = context;
+        this.todos = todos;
     }
 
     public void addItem(final String item) {
@@ -93,8 +97,6 @@ public class ListAdapter extends BaseAdapter {
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
-//            Log.d("Convert View", convertView.toString());
-//            Log.d("Convert View's Tag", convertView.getTag().toString());
         }
 
         if (holder.textView != null) {
@@ -102,15 +104,46 @@ public class ListAdapter extends BaseAdapter {
 
         } else if (holder.checkBox != null) {
             holder.checkBox.setText(mData.get(position));
-            Todo todo = new Todo();
-            todo.isCompleted = holder.checkBox.isChecked();
-            holder.checkBox.setTag(todo);
+            Todo currentTodo = new Todo();
+            for (int i = 0; i < todos.size(); i++) {
+                if (Objects.equals(mData.get(position), todos.get(i).text)) {
+                    currentTodo = todos.get(i);
+                    holder.checkBox.setChecked(currentTodo.isCompleted);
+                }
+            }
+            if (currentTodo.isCompleted) crossOut(holder.checkBox);
+            holder.checkBox.setTag(currentTodo);
 
             holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if (buttonView != null) {
                         Todo todoInFocus = (Todo) buttonView.getTag();
                         if (todoInFocus.isCompleted == isChecked) return;
+                        if (isChecked) crossOut(buttonView); else removeLineThrough(buttonView);
+
+                        todoInFocus.isCompleted = isChecked;
+
+
+                        String url = context.getString(R.string.projectsRequest) + todoInFocus.project_id +
+                                "/todos/" + todoInFocus.id;
+                        JsonObject params = new JsonObject();
+
+
+                        params.addProperty("id", todoInFocus.id);
+                        params.addProperty("isCompleted", todoInFocus.text);
+
+                        Ion.with(context)
+                                .load("PATCH", url)
+                                .setJsonObjectBody(params)
+                                .asJsonObject()
+                                .setCallback(new FutureCallback<JsonObject>() {
+
+                                    @Override
+                                    public void onCompleted(Exception e, JsonObject result) {
+
+                                    }
+                                });
+
                     }
 
                 }
@@ -119,6 +152,14 @@ public class ListAdapter extends BaseAdapter {
 
 
         return convertView;
+    }
+
+    private void crossOut(TextView textView) {
+        textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+    }
+
+    private void removeLineThrough(TextView textView) {
+        textView.setPaintFlags(0);
     }
 
 

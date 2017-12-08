@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
@@ -27,13 +26,8 @@ public class MainActivity extends AppCompatActivity {
     private ListAdapter mAdapter;
 
     private List<Project> projects;
-    private List<Todo> todos;
+    public List<Todo> todos;
 
-    private String[] projectsArray = {
-            "Семья",
-            "Работа",
-            "Прочее"
-    };
 
 
     @Override
@@ -48,19 +42,31 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup floating action button
         ActionButton fab = this.findViewById(R.id.action_button);
+        fab.setButtonColor(getResources().getColor(R.color.pinkSearch));
+        fab.setButtonColorPressed(getResources().getColor(R.color.pinkSearchDark));
+        fab.setImageResource(R.drawable.fab_plus_icon);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bundle bundle = new Bundle();
-                bundle.putStringArray("key", projectsArray);
+
                 Intent intent = new Intent(MainActivity.this, NewTodoActivity.class);
-                intent.putExtras(bundle);
                 startActivity(intent);
             }
         });
 
 
 
+        // Set default font
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath(getString(R.string.default_font))
+                .setFontAttrId(R.attr.fontPath)
+                .build()
+        );
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         Ion.with(this)
         .load(getString(R.string.projectsIndexRequest))
         .asJsonArray()
@@ -77,9 +83,9 @@ public class MainActivity extends AppCompatActivity {
                         projects.add(new Gson().fromJson(projectJsonElement, Project.class));
 
                     }
-                    Log.d("BIBAAA", projects.toString());
-                    // Setup ListView
 
+
+                    // Setup ListView
                     Ion.with(MainActivity.this)
                     .load(getString(R.string.todosIndexRequest))
                     .asJsonArray()
@@ -88,51 +94,35 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onCompleted(Exception e, JsonArray result) {
 
-                            todos = new ArrayList<>();
+                        todos = new ArrayList<>();
 
-                            for (final JsonElement todoJsonElement : result) {
+                        for (final JsonElement todoJsonElement : result) {
 
-                                todos.add(new Gson().fromJson(todoJsonElement, Todo.class));
+                            todos.add(new Gson().fromJson(todoJsonElement, Todo.class));
 
-                            }
+                        }
 
-                            // Setup ListView
-                            ListView listView = MainActivity.this.findViewById(R.id.list_view);
-                            mAdapter = new ListAdapter(MainActivity.this);
+                        // Setup ListView
+                        ListView listView = MainActivity.this.findViewById(R.id.list_view);
+                        mAdapter = new ListAdapter(MainActivity.this, todos);
 
-                            for (int i = 0; i < projects.size(); i++) {
-                                Project currentProject = projects.get(i);
-                                mAdapter.addSectionDataItem(currentProject.title);
-                                for (int j = 0; j < todos.size(); j++) {
-                                    Todo currentTodo = todos.get(j);
-                                    if (currentTodo.project_id == currentProject.id) {
-                                        mAdapter.addItem(currentTodo.text);
-                                    }
+                        for (int i = 0; i < projects.size(); i++) {
+                            Project currentProject = projects.get(i);
+                            mAdapter.addSectionDataItem(currentProject.title);
+                            for (int j = 0; j < todos.size(); j++) {
+                                Todo currentTodo = todos.get(j);
+                                if (currentTodo.project_id == currentProject.id) {
+                                    mAdapter.addItem(currentTodo.text);
                                 }
                             }
-
-                            listView.setAdapter(mAdapter);
+                        }
+                        listView.setAdapter(mAdapter);
                         }
                     });
-
-
                 }
             }
         });
-
-
-
-
-
-
-        // Set default font
-        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
-                .setDefaultFontPath(getString(R.string.default_font))
-                .setFontAttrId(R.attr.fontPath)
-                .build()
-        );
     }
-
 
     @Override
     protected void attachBaseContext(Context newBase) {
